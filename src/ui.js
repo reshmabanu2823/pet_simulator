@@ -24,7 +24,7 @@ export function sanitizeHexColor(val, fallback) {
 
 export const FUR_PRESETS = [
   {
-    name: 'Sakura Mochi',
+    name: 'Sakura Kitty',
     baseColor: '#5e2bff',
     tipColor: '#ff9ec7',
     furLength: 0.31,

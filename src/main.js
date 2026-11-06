@@ -11,7 +11,7 @@ const uiContainer = document.getElementById('ui-root');
 const hudHint = document.getElementById('hud-hint');
 
 if (hudHint) {
-  hudHint.textContent = 'Drag across Mochi-Puff to pet & comb fur · Click creature to boop · Orbit with mouse';
+  hudHint.textContent = 'Drag across Kitty to pet & comb fur · Click creature to boop · Orbit with mouse';
 }
 
 const urlSearchParams = new URLSearchParams(window.location.search);
@@ -197,9 +197,9 @@ function applyEnvironmentPreset(envId) {
   updateLightingFromState();
   if (hudHint) {
     if (envId === 'ar') {
-      hudHint.textContent = 'AR Active: Tap screen to place Mochi on detected surface · Pet or boop him · Drag to orbit';
+      hudHint.textContent = 'AR Active: Tap screen to place Kitty on detected surface · Pet or boop her · Drag to orbit';
     } else {
-      hudHint.textContent = 'Drag across Mochi-Puff to pet & comb fur · Click creature to boop · Orbit with mouse';
+      hudHint.textContent = 'Drag across Kitty to pet & comb fur · Click creature to boop · Orbit with mouse';
     }
   }
 }
@@ -317,7 +317,7 @@ const ui = createMinimalUI(uiContainer, simState, (key, value) => {
       creature.resetPlacement();
       envManager.resetARAnchor();
       if (hudHint) {
-        hudHint.textContent = 'Mochi reset to center position · Tap screen to place on detected surface';
+        hudHint.textContent = 'Kitty reset to center position · Tap screen to place on detected surface';
       }
       break;
     default:
@@ -434,7 +434,7 @@ window.addEventListener('pointerup', (e) => {
         creature.placeAt(planeHit.point, planeHit.normal, true, camera.position);
         envManager.triggerPlacementPulse(planeHit.point);
         if (hudHint) {
-          hudHint.textContent = `Placed Mochi on ${planeHit.surfaceType} · Estimated Depth: ${planeHit.depth.toFixed(2)}m (${Math.round(planeHit.confidence * 100)}% conf)`;
+          hudHint.textContent = `Placed Kitty on ${planeHit.surfaceType} · Estimated Depth: ${planeHit.depth.toFixed(2)}m (${Math.round(planeHit.confidence * 100)}% conf)`;
         }
       }
     }
