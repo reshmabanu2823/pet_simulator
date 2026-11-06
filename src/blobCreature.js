@@ -8,45 +8,50 @@ import * as THREE from 'three';
  * - Slightly longer/fluffier (1.15) on the cheek tufts, chest fluff, and ear tips
  */
 export function evaluateFollicleMask(x, y, z) {
-  // Left and right eye centers in local space (feline cat-eye placement)
-  const lx = x + 0.32;
-  const rx = x - 0.32;
-  const ey = y - 0.16;
-  const ez = z - 0.90;
+  // Left and right eye centers in local space (matching large circular chibi eyes: ±0.28, 0.12, 0.96)
+  const lx = x + 0.28;
+  const rx = x - 0.28;
+  const ey = y - 0.12;
+  const ez = z - 0.92;
 
-  const distLeftEye = Math.sqrt(lx * lx + ey * ey * 1.15 + ez * ez);
-  const distRightEye = Math.sqrt(rx * rx + ey * ey * 1.15 + ez * ez);
+  const distLeftEye = Math.sqrt(lx * lx + ey * ey * 1.1 + ez * ez);
+  const distRightEye = Math.sqrt(rx * rx + ey * ey * 1.1 + ez * ez);
   const minEyeDist = Math.min(distLeftEye, distRightEye);
 
-  // Clear area around Kitty's cat eyes so eyes & cat-eyeliner are completely visible
-  if (minEyeDist < 0.165) {
+  // Clean clearing around the large glossy circular eyes
+  if (minEyeDist < 0.18) {
     return 0.0;
   }
-  const eyeMask = smoothstep(0.165, 0.28, minEyeDist);
+  const eyeMask = smoothstep(0.18, 0.28, minEyeDist);
 
-  // Cat muzzle & nose zone: trim fur on the nose button, whisker pads, and cat mouth
-  const mx = x / 0.28;
-  const my = (y - 0.05) / 0.19;
-  const mz = (z - 0.97) / 0.24;
+  // Eyebrow clearing (short fuzz so black brows stand out crisp)
+  const leftBrowDist = Math.hypot(x + 0.27, y - 0.35, z - 0.92);
+  const rightBrowDist = Math.hypot(x - 0.27, y - 0.35, z - 0.92);
+  const browMask = 0.35 + 0.65 * smoothstep(0.06, 0.18, Math.min(leftBrowDist, rightBrowDist));
+
+  // Cat muzzle & nose zone: trim fur on the white whisker pads and hot pink nose button
+  const mx = x / 0.26;
+  const my = (y + 0.01) / 0.16;
+  const mz = (z - 0.98) / 0.22;
   const distMuzzle = Math.sqrt(mx * mx + my * my + mz * mz);
-  const muzzleMask = 0.08 + 0.92 * smoothstep(0.38, 1.08, distMuzzle);
+  const muzzleMask = 0.06 + 0.94 * smoothstep(0.35, 1.05, distMuzzle);
 
-  // Inner ear cavity clearing: trim fur on the front side of the ears so pink inner ear shows
-  const leftEarDist = Math.hypot(x + 0.44, (y - 0.80) * 0.9, z - 0.14);
-  const rightEarDist = Math.hypot(x - 0.44, (y - 0.80) * 0.9, z - 0.14);
-  const earFrontMask = 0.25 + 0.75 * smoothstep(0.10, 0.34, Math.min(leftEarDist, rightEarDist));
+  // Inner ear cavity clearing: trim fur on the front side of the ears so pink inner ear scoop is clearly visible
+  const leftEarDist = Math.hypot(x + 0.44, (y - 0.74) * 0.9, z - 0.14);
+  const rightEarDist = Math.hypot(x - 0.44, (y - 0.74) * 0.9, z - 0.14);
+  const earFrontMask = 0.20 + 0.80 * smoothstep(0.10, 0.32, Math.min(leftEarDist, rightEarDist));
 
   // Bottom belly contact pad taper
   const bottomMask = smoothstep(-1.05, -0.72, y);
 
-  // Extra fluff boost on cheeks and chest tuft
+  // Extra fluff boost on round cheeks
   const cheekDist = Math.min(
-    Math.hypot(x + 0.56, y - 0.02, z - 0.68),
-    Math.hypot(x - 0.56, y - 0.02, z - 0.68)
+    Math.hypot(x + 0.55, y + 0.05, z - 0.65),
+    Math.hypot(x - 0.55, y + 0.05, z - 0.65)
   );
-  const cheekFluff = 1.0 + 0.22 * (1.0 - smoothstep(0.0, 0.42, cheekDist));
+  const cheekFluff = 1.0 + 0.25 * (1.0 - smoothstep(0.0, 0.45, cheekDist));
 
-  return Math.max(0.0, Math.min(1.25, eyeMask * muzzleMask * earFrontMask * bottomMask * cheekFluff));
+  return Math.max(0.0, Math.min(1.30, eyeMask * browMask * muzzleMask * earFrontMask * bottomMask * cheekFluff));
 }
 
 /**
@@ -253,69 +258,82 @@ export function createBlobCreature() {
   faceGroup.name = 'FacialFeatures';
   root.add(faceGroup);
 
-  // 1. Stylized 3D Cat Ears with soft pink velvet inner ear cavity
+  // 1. Stylized 3D Cat Ears with soft peach-pink velvet inner ear cavity
   for (const side of [-1, 1]) {
     const earGroup = new THREE.Group();
-    earGroup.position.set(side * 0.46, 0.82, 0.08);
-    earGroup.rotation.y = side * 0.26;
-    earGroup.rotation.x = -0.10;
-    earGroup.rotation.z = -side * 0.22;
+    earGroup.position.set(side * 0.46, 0.74, 0.10);
+    earGroup.rotation.y = side * 0.20;
+    earGroup.rotation.x = -0.08;
+    earGroup.rotation.z = -side * 0.18;
 
-    // Outer ear cone (velvety dark tone matching creature silhouette)
-    const outerEarGeo = new THREE.ConeGeometry(0.25, 0.52, 4);
-    outerEarGeo.scale(0.85, 1.0, 0.40);
+    // Outer ear shell (velvety dark tone matching the deep purple fur base)
+    const outerEarGeo = new THREE.ConeGeometry(0.26, 0.54, 4);
+    outerEarGeo.scale(0.85, 1.0, 0.38);
     const outerEarMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#3c2538'),
-      roughness: 0.76,
+      color: new THREE.Color('#340742'),
+      roughness: 0.75,
       metalness: 0.03
     });
     const outerEar = new THREE.Mesh(outerEarGeo, outerEarMat);
     outerEar.position.y = 0.22;
     earGroup.add(outerEar);
 
-    // Inner ear pink velvet pad (facing forward)
-    const innerEarGeo = new THREE.ConeGeometry(0.17, 0.40, 4);
-    innerEarGeo.scale(0.78, 0.98, 0.24);
+    // Inner ear scoop: large smooth salmon/peach-pink velvet cavity (from reference image)
+    const innerEarGeo = new THREE.ConeGeometry(0.185, 0.44, 4);
+    innerEarGeo.scale(0.82, 0.98, 0.22);
     const innerEarMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#ffa8c4'),
-      roughness: 0.52,
+      color: new THREE.Color('#f88da6'),
+      roughness: 0.48,
       metalness: 0.02
     });
     const innerEar = new THREE.Mesh(innerEarGeo, innerEarMat);
-    innerEar.position.set(0, 0.20, 0.038);
+    innerEar.position.set(0, 0.20, 0.042);
     earGroup.add(innerEar);
 
     faceGroup.add(earGroup);
   }
 
-  // 2. Feline Cat Eyes with almond slant, vertical pupils, and anime catchlights
+  // 2. Cute arched dark eyebrows above the eyes (from reference image)
+  const eyebrowMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#14081c') });
+  const eyebrows = [];
+  for (const side of [-1, 1]) {
+    const start = new THREE.Vector3(side * 0.19, 0.315, 0.94);
+    const mid = new THREE.Vector3(side * 0.275, 0.36, 0.93);
+    const end = new THREE.Vector3(side * 0.365, 0.315, 0.91);
+    const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+    const browGeo = new THREE.TubeGeometry(curve, 14, 0.0085, 6, false);
+    const brow = new THREE.Mesh(browGeo, eyebrowMat);
+    faceGroup.add(brow);
+    eyebrows.push({ mesh: brow, baseY: brow.position.y });
+  }
+
+  // 3. Large, glossy circular chibi eyes with amethyst crescent and top-left catchlight
   const eyeMaterial = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#100b18'),
-    roughness: 0.04,
-    metalness: 0.05,
+    color: new THREE.Color('#12061e'),
+    roughness: 0.03,
+    metalness: 0.04,
     clearcoat: 1.0,
-    clearcoatRoughness: 0.03,
+    clearcoatRoughness: 0.02,
     reflectivity: 1.0
   });
 
   const irisMaterial = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#582d8c')
+    color: new THREE.Color('#7834bf')
   });
 
   const pupilMaterial = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#08040d')
+    color: new THREE.Color('#140620')
   });
 
   const highlightMat = new THREE.MeshBasicMaterial({
     color: new THREE.Color('#ffffff')
   });
 
-  const warmHighlightMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#ffe4f2')
-  });
-
-  const eyelinerMat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color('#1a0c24')
+  const eyeBlushMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color('#f25290'),
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false
   });
 
   const eyes = [];
@@ -323,145 +341,127 @@ export function createBlobCreature() {
 
   for (const side of eyeSides) {
     const eyePivot = new THREE.Group();
-    eyePivot.position.set(side * 0.32, 0.16, 0.95);
-    eyePivot.rotation.y = side * 0.24;
-    eyePivot.rotation.x = -0.05;
-    eyePivot.rotation.z = -side * 0.16; // Iconic feline cat-eye upward tilt!
+    eyePivot.position.set(side * 0.28, 0.12, 0.96);
+    eyePivot.rotation.y = side * 0.18;
+    eyePivot.rotation.x = -0.04;
 
-    // Dark glossy cornea
-    const eyeballGeo = new THREE.SphereGeometry(0.175, 32, 24);
-    eyeballGeo.scale(1.06, 0.96, 0.68);
+    // Dark glossy cornea sphere
+    const eyeballGeo = new THREE.SphereGeometry(0.18, 32, 24);
+    eyeballGeo.scale(1.0, 1.0, 0.72);
     const eyeball = new THREE.Mesh(eyeballGeo, eyeMaterial);
     eyePivot.add(eyeball);
 
-    // Jewel violet-indigo feline iris
-    const irisGeo = new THREE.SphereGeometry(0.125, 24, 16);
-    irisGeo.scale(0.96, 0.95, 0.38);
+    // Glowing violet/amethyst iris crescent on lower half
+    const irisGeo = new THREE.SphereGeometry(0.14, 24, 16);
+    irisGeo.scale(0.96, 0.92, 0.42);
     const iris = new THREE.Mesh(irisGeo, irisMaterial);
-    iris.position.set(0, -0.015, 0.088);
+    iris.position.set(0, -0.035, 0.082);
     eyePivot.add(iris);
 
-    // Vertical feline cat slit pupil!
-    const pupilGeo = new THREE.SphereGeometry(0.09, 20, 16);
-    pupilGeo.scale(0.32, 1.12, 0.32);
+    // Deep obsidian center pupil dome
+    const pupilGeo = new THREE.SphereGeometry(0.13, 24, 16);
+    pupilGeo.scale(0.85, 0.85, 0.38);
     const pupil = new THREE.Mesh(pupilGeo, pupilMaterial);
-    pupil.position.set(0, -0.012, 0.102);
+    pupil.position.set(0, 0.02, 0.095);
     eyePivot.add(pupil);
 
-    // Sleek cat-eyeliner upper eyelid curve
-    const eyelinerGeo = new THREE.TorusGeometry(0.15, 0.012, 8, 20, Math.PI * 0.65);
-    const eyeliner = new THREE.Mesh(eyelinerGeo, eyelinerMat);
-    eyeliner.position.set(0, 0.065, 0.095);
-    eyeliner.rotation.z = -side * 0.22;
-    eyePivot.add(eyeliner);
-
-    // Primary large anime catchlight (top-inner)
-    const catchlightMainGeo = new THREE.SphereGeometry(0.046, 16, 12);
-    catchlightMainGeo.scale(1.0, 1.15, 0.32);
+    // SINGLE large, crisp, bright white circular highlight located in the TOP-LEFT of EACH eye
+    const catchlightMainGeo = new THREE.SphereGeometry(0.052, 18, 14);
+    catchlightMainGeo.scale(1.0, 1.08, 0.32);
     const catchlightMain = new THREE.Mesh(catchlightMainGeo, highlightMat);
-    catchlightMain.position.set(-side * 0.042, 0.052, 0.115);
+    catchlightMain.position.set(-0.046, 0.054, 0.118);
     eyePivot.add(catchlightMain);
 
-    // Secondary lower rim catchlight
-    const catchlightSubGeo = new THREE.SphereGeometry(0.024, 14, 10);
-    catchlightSubGeo.scale(1.0, 1.0, 0.32);
-    const catchlightSub = new THREE.Mesh(catchlightSubGeo, warmHighlightMat);
-    catchlightSub.position.set(side * 0.048, -0.052, 0.112);
-    eyePivot.add(catchlightSub);
+    // Soft rosy blush glow under the lower outer rim of each eye
+    const blushGeo = new THREE.SphereGeometry(0.095, 16, 12);
+    blushGeo.scale(1.3, 0.65, 0.3);
+    const eyeBlush = new THREE.Mesh(blushGeo, eyeBlushMat);
+    eyeBlush.position.set(side * 0.035, -0.095, 0.085);
+    eyePivot.add(eyeBlush);
 
     faceGroup.add(eyePivot);
     eyes.push({
       pivot: eyePivot,
       basePos: eyePivot.position.clone(),
       catchlightMain,
-      catchlightSub,
+      iris,
       pupil,
       side
     });
   }
 
-  // 3. Puffy rounded cat whisker pads (muzzle cheeks)
+  // 4. Soft fluffy white / light-pink whisker pads (muzzle cheeks)
   const muzzlePadMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color('#fce7f1'),
-    roughness: 0.85,
-    metalness: 0.02
+    color: new THREE.Color('#fae6f2'),
+    roughness: 0.92,
+    metalness: 0.01
   });
   for (const side of [-1, 1]) {
-    const padGeo = new THREE.SphereGeometry(0.075, 20, 16);
-    padGeo.scale(1.22, 0.86, 0.58);
+    const padGeo = new THREE.SphereGeometry(0.082, 24, 18);
+    padGeo.scale(1.25, 0.90, 0.62);
     const pad = new THREE.Mesh(padGeo, muzzlePadMat);
-    pad.position.set(side * 0.078, 0.038, 1.055);
-    pad.rotation.y = side * 0.20;
+    pad.position.set(side * 0.076, -0.015, 1.045);
+    pad.rotation.y = side * 0.16;
     pad.rotation.z = side * 0.04;
     faceGroup.add(pad);
   }
 
-  // 4. Inverted triangular soft-pink cat nose
+  // 5. Vibrant hot pink / magenta rounded triangle cat nose (from reference image)
   const noseShape = new THREE.Shape();
-  const nw = 0.044;
-  const nh = 0.034;
-  noseShape.moveTo(-nw, nh * 0.5);
-  noseShape.quadraticCurveTo(0, nh * 0.72, nw, nh * 0.5);
-  noseShape.quadraticCurveTo(nw * 0.88, 0, 0.005, -nh);
-  noseShape.quadraticCurveTo(0, -nh * 1.12, -0.005, -nh);
-  noseShape.quadraticCurveTo(-nw * 0.88, 0, -nw, nh * 0.5);
+  const nw = 0.045;
+  const nh = 0.035;
+  noseShape.moveTo(-nw, nh * 0.45);
+  noseShape.quadraticCurveTo(0, nh * 0.72, nw, nh * 0.45);
+  noseShape.quadraticCurveTo(nw * 0.82, 0, 0.004, -nh);
+  noseShape.quadraticCurveTo(0, -nh * 1.15, -0.004, -nh);
+  noseShape.quadraticCurveTo(-nw * 0.82, 0, -nw, nh * 0.45);
 
   const noseExtrudeSettings = {
-    depth: 0.026,
+    depth: 0.028,
     bevelEnabled: true,
-    bevelSegments: 3,
+    bevelSegments: 4,
     steps: 1,
-    bevelSize: 0.012,
-    bevelThickness: 0.015
+    bevelSize: 0.014,
+    bevelThickness: 0.016
   };
   const noseGeo = new THREE.ExtrudeGeometry(noseShape, noseExtrudeSettings);
   const noseMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#ff7ea2'),
-    roughness: 0.28,
+    color: new THREE.Color('#f72585'), // Vibrant hot-pink matching the image!
+    roughness: 0.22,
     metalness: 0.04,
-    clearcoat: 0.65,
-    clearcoatRoughness: 0.18
+    clearcoat: 0.85,
+    clearcoatRoughness: 0.15
   });
   const nose = new THREE.Mesh(noseGeo, noseMat);
-  nose.position.set(0, 0.076, 1.075);
-  nose.rotation.x = -0.06;
+  nose.position.set(0, 0.042, 1.072);
+  nose.rotation.x = -0.05;
   faceGroup.add(nose);
 
-  // 5. Philtrum & smiling cat "ω" mouth
-  const mouthMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#381126') });
-  const philtrumGeo = new THREE.CylinderGeometry(0.0065, 0.0065, 0.038, 8);
-  const philtrum = new THREE.Mesh(philtrumGeo, mouthMat);
-  philtrum.position.set(0, 0.046, 1.066);
+  // Dark philtrum seam line dropping from nose bottom between the two white pads
+  const philtrumMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#380824') });
+  const philtrumGeo = new THREE.CylinderGeometry(0.0055, 0.0055, 0.038, 8);
+  const philtrum = new THREE.Mesh(philtrumGeo, philtrumMat);
+  philtrum.position.set(0, 0.008, 1.062);
   philtrum.rotation.x = 0.12;
   faceGroup.add(philtrum);
 
-  for (const side of [-1, 1]) {
-    const arcGeo = new THREE.TorusGeometry(0.044, 0.0085, 10, 24, Math.PI * 0.88);
-    const arc = new THREE.Mesh(arcGeo, mouthMat);
-    arc.position.set(side * 0.042, 0.025, 1.063);
-    arc.rotation.x = Math.PI + 0.15;
-    arc.rotation.y = side * 0.16;
-    arc.rotation.z = -side * 0.07;
-    faceGroup.add(arc);
-  }
-
-  // 6. Whiskers: 6 delicate 3D whiskers curving out from Kitty's muzzle
+  // 6. Whiskers: exactly 3 white whiskers per cheek fanning downward across cheeks (from reference image)
   const whiskerMat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#ffffff'),
-    roughness: 0.12,
-    metalness: 0.05,
-    transmission: 0.35,
+    roughness: 0.10,
+    metalness: 0.02,
+    transmission: 0.20,
     thickness: 0.05,
-    clearcoat: 0.85
+    clearcoat: 0.95
   });
 
   const whiskerSpecs = [
-    // Top whisker: sweeps slightly up and back-outward
-    [new THREE.Vector3(0.09, 0.052, 1.06), new THREE.Vector3(0.38, 0.11, 0.98), new THREE.Vector3(0.66, 0.12, 0.84)],
-    // Middle whisker: shoots outward horizontally
-    [new THREE.Vector3(0.10, 0.034, 1.06), new THREE.Vector3(0.42, 0.04, 0.96), new THREE.Vector3(0.72, 0.015, 0.82)],
-    // Lower whisker: sweeps down and back
-    [new THREE.Vector3(0.09, 0.016, 1.06), new THREE.Vector3(0.38, -0.03, 0.96), new THREE.Vector3(0.65, -0.09, 0.82)]
+    // Top whisker: slightly downward-horizontal
+    [new THREE.Vector3(0.11, 0.005, 1.05), new THREE.Vector3(0.35, -0.015, 0.98), new THREE.Vector3(0.58, -0.045, 0.88)],
+    // Middle whisker: downward angle ~15 degrees
+    [new THREE.Vector3(0.11, -0.025, 1.05), new THREE.Vector3(0.36, -0.075, 0.97), new THREE.Vector3(0.60, -0.135, 0.87)],
+    // Bottom whisker: downward angle ~28 degrees
+    [new THREE.Vector3(0.10, -0.055, 1.05), new THREE.Vector3(0.34, -0.135, 0.96), new THREE.Vector3(0.55, -0.220, 0.85)]
   ];
 
   for (const side of [-1, 1]) {
@@ -470,7 +470,7 @@ export function createBlobCreature() {
       const mid = new THREE.Vector3(p1.x * side, p1.y, p1.z);
       const end = new THREE.Vector3(p2.x * side, p2.y, p2.z);
       const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-      const whiskerGeo = new THREE.TubeGeometry(curve, 18, 0.007, 6, false);
+      const whiskerGeo = new THREE.TubeGeometry(curve, 18, 0.008, 6, false);
       const whisker = new THREE.Mesh(whiskerGeo, whiskerMat);
       faceGroup.add(whisker);
     }
@@ -742,11 +742,19 @@ export function createBlobCreature() {
     for (const eye of eyes) {
       eye.pivot.scale.y = blinkScaleY;
       if (eye.pupil) {
-        eye.pupil.position.x = animState.currentLook.x * 0.020;
-        eye.pupil.position.y = -0.012 + animState.currentLook.y * 0.018;
+        eye.pupil.position.x = animState.currentLook.x * 0.018;
+        eye.pupil.position.y = 0.02 + animState.currentLook.y * 0.016;
       }
-      eye.catchlightMain.position.x = -eye.side * 0.042 + animState.currentLook.x * 0.028;
-      eye.catchlightMain.position.y = 0.052 + animState.currentLook.y * 0.025;
+      if (eye.iris) {
+        eye.iris.position.x = animState.currentLook.x * 0.015;
+        eye.iris.position.y = -0.035 + animState.currentLook.y * 0.014;
+      }
+      eye.catchlightMain.position.x = -0.046 + animState.currentLook.x * 0.018;
+      eye.catchlightMain.position.y = 0.054 + animState.currentLook.y * 0.016;
+    }
+
+    for (const brow of eyebrows) {
+      brow.mesh.position.y = brow.baseY + animState.currentLook.y * 0.012 + animState.boopImpulse * 0.018;
     }
   }
 

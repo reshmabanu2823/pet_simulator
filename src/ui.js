@@ -25,14 +25,14 @@ export function sanitizeHexColor(val, fallback) {
 export const FUR_PRESETS = [
   {
     name: 'Sakura Kitty',
-    baseColor: '#5e2bff',
-    tipColor: '#ff9ec7',
-    furLength: 0.31,
-    furDensity: 0.75,
-    roughness: 0.77,
-    specular: 0.24,
-    clumping: 0.35,
-    curliness: 0.23
+    baseColor: '#52087e',
+    tipColor: '#e530e5',
+    furLength: 0.37,
+    furDensity: 0.90,
+    roughness: 0.62,
+    specular: 0.35,
+    clumping: 0.45,
+    curliness: 0.14
   },
   {
     name: 'Golden Fluff',
